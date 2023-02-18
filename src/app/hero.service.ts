@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { Observable, of } from 'rxjs';
+import { catchError, map, tap} from 'rxjs/operators';
 
 import { Hero } from './hero';
 import { HEROES } from './mock-heroes';
@@ -9,7 +10,7 @@ import { MessageService } from './message.service';
 
 @Injectable({ providedIn: 'root' })
 export class HeroService {
-  private heroesUrl = 'api/heores'; // URL lto web api
+  private heroesUrl = 'api/heroes'; // URL lto web api
 
   constructor(
     private http: HttpClient,
@@ -18,7 +19,25 @@ export class HeroService {
 
   /** GET heroes from the server */
   getHeroes(): Observable<Hero[]> {
-    return this.http.get<Hero[]>(this.heroesUrl);
+    return this.http.get<Hero[]>(this.heroesUrl)
+      .pipe(
+        catchError(this.handleError<Hero[]>('getHeroes', []))
+      );
+  }
+
+  private handleError<T>(operation = 'operation', result?: T){
+    return(error: any): Observable<T> => {
+
+    // TODO: send the error to remote logging infrastructure
+    console.error(error);
+    
+    //TODO: better job of transforming error for user consumption 
+    this.log(`${operation} failed: ${error.message}`);
+
+    return of(result as T);
+
+    }
+
   }
 
   private log(message: string) {
