@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { Observable, of } from 'rxjs';
-import { catchError, map, tap} from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 
 import { Hero } from './hero';
 import { HEROES } from './mock-heroes';
@@ -17,27 +17,28 @@ export class HeroService {
     private messageService: MessageService
   ) {}
 
+  httpOptions = {
+    headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+  };
+
   /** GET heroes from the server */
   getHeroes(): Observable<Hero[]> {
-    return this.http.get<Hero[]>(this.heroesUrl)
-      .pipe(
-        catchError(this.handleError<Hero[]>('getHeroes', []))
-      );
+    return this.http.get<Hero[]>(this.heroesUrl).pipe(
+      tap((_) => this.log('fetched heroes')),
+      catchError(this.handleError<Hero[]>('getHeroes', []))
+    );
   }
 
-  private handleError<T>(operation = 'operation', result?: T){
-    return(error: any): Observable<T> => {
+  private handleError<T>(operation = 'operation', result?: T) {
+    return (error: any): Observable<T> => {
+      // TODO: send the error to remote logging infrastructure
+      console.error(error);
 
-    // TODO: send the error to remote logging infrastructure
-    console.error(error);
-    
-    //TODO: better job of transforming error for user consumption 
-    this.log(`${operation} failed: ${error.message}`);
+      //TODO: better job of transforming error for user consumption
+      this.log(`${operation} failed: ${error.message}`);
 
-    return of(result as T);
-
-    }
-
+      return of(result as T);
+    };
   }
 
   private log(message: string) {
@@ -45,12 +46,21 @@ export class HeroService {
   }
 
   getHero(id: number): Observable<Hero> {
-    // For now, assume that a hero with the specified `id` always exists.
-    // Error handling will be added in the next step of the tutorial.
-    const hero = HEROES.find((h) => h.id === id)!;
-    this.messageService.add(`HeroService: fetched hero id=${id}`);
-    return of(hero);
+    const url = `${this.heroesUrl}/${id}`;
+    return this.http.get<Hero>(url).pipe(
+      tap((_) => this.log(`fetched hero id=${id}`)),
+      catchError(this.handleError<Hero>(`get Hero id=${id}`))
+    );
   }
+
+  updateHero(hero: Hero): Observable<any> {
+    return this.http.put(this.heroesUrl, hero, this.httpOptions).pipe(
+      tap(_ => this.log(`updated hero id = ${hero.id}`)),
+      catchError(this.handleError<any>('updated hero'))
+    );
+  }
+
+
 }
 
 /*
