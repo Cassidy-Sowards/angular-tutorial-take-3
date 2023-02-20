@@ -7,6 +7,16 @@
   </li>
 </ul>
 
+<div>
+  <label for="new-hero">Hero name: </label>
+  <input id="new-hero" #heroName />
+
+  <!----(click) passes input to value to add() and then clears the input -->
+  <button type="button" class="add-button" (click)="add(heroname.value) heroname.value=''">
+    Add hero
+  </button>
+</div>
+
 
 <!-- 
 Copyright Google LLC. All Rights Reserved.
